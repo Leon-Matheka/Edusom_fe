@@ -1,0 +1,11 @@
+teacher_id,full_name,email,subject,school,years_experience
+1,Alice Mwangi,alice.mwangi@example.com,Mathematics,Sunrise High School,7
+2,Brian Otieno,b.otieno@example.com,Physics,Nairobi School,10
+3,Caroline Achieng,c.achieng@example.com,English,Light Academy,5
+4,David Kiptoo,d.kiptoo@example.com,Chemistry,Kapsabet Boys,12
+5,Evelyn Njeri,e.njeri@example.com,Biology,Alliance Girls,8
+6,Felix Odhiambo,f.odhiambo@example.com,History,Starehe Boys,6
+7,Grace Wanjiru,g.wanjiru@example.com,Geography,Moi Girls Eldoret,9
+8,Henry Kamau,h.kamau@example.com,Computer Studies,Ruthimitu Secondary,4
+9,Irene Aoko,i.aoko@example.com,Business Studies,Makini School,11
+10,John Mutua,j.mutua@example.com,CRE,Riara High School,3
