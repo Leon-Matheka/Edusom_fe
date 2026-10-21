@@ -1,14 +1,7 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
-import {
-  BookOpen,
-  MessageCircle,
-  Bell,
-  LayoutGrid,
-  ChevronDown,
-  ArrowUpRight,
-  Menu,
-} from "lucide-react";
+import DashboardLayout from "../../components/layout/DashboardLayout.jsx";
+import { MessageCircle, Bell, LayoutGrid, ChevronDown, ArrowUpRight } from "lucide-react";
 import ParentsM from "./ParentsM.jsx";
 import { students, getChildrenByParentId } from "../../mockData/classMockData";
 
@@ -28,6 +21,11 @@ const c = {
   tealStrong: "#1F6359",
   danger: "#B3453D",
 };
+
+const nav = [
+  { label: "Overview", icon: LayoutGrid, to: "/parent" },
+  { label: "Messages", icon: MessageCircle, to: "/parent/messages" },
+];
 
 // TODO: replace with the signed-in parent's real id once auth is wired up.
 const CURRENT_PARENT_ID = 201;
@@ -205,81 +203,23 @@ function Overview() {
 
 export default function PD_Homepage() {
   const location = useLocation();
-  const [navOpen, setNavOpen] = useState(false);
-
-  const nav = [
-    { label: "Overview", path: "/parent", icon: LayoutGrid, match: (p) => p === "/parent" },
-    { label: "Messages", path: "/parent/messages", icon: MessageCircle, match: (p) => p.startsWith("/parent/messages") },
-  ];
+  const onMessages = location.pathname.startsWith("/parent/messages");
 
   return (
-    <div style={{ background: c.page, color: c.ink }} className="min-h-screen font-sans">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30" style={{ background: c.page, borderBottom: `1px solid ${c.border}` }}>
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <button className="md:hidden p-1.5" onClick={() => setNavOpen((v) => !v)}>
-              <Menu size={20} />
-            </button>
-            <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: c.teal }}>
-              <BookOpen size={16} color={c.ink} />
-            </div>
-            <span className="font-serif font-semibold text-lg">ClassBridge</span>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {nav.map((item) => {
-              const active = item.match(location.pathname);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition"
-                  style={{
-                    background: active ? c.tealSoft : "transparent",
-                    color: active ? c.tealStrong : c.subtle,
-                  }}
-                >
-                  <Icon size={16} /> {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <button className="relative p-2 rounded-full hover:opacity-80 transition" style={{ color: c.subtle }}>
-            <Bell size={20} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2" style={{ background: c.teal, borderColor: c.page }} />
-          </button>
-        </div>
-
-        {navOpen && (
-          <div className="md:hidden px-6 pb-4 flex flex-col gap-1">
-            {nav.map((item) => {
-              const active = item.match(location.pathname);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setNavOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
-                  style={{ background: active ? c.tealSoft : "transparent", color: active ? c.tealStrong : c.subtle }}
-                >
-                  <Icon size={16} /> {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </header>
-
-      <main className="max-w-6xl mx-auto px-6 py-8">
+    <DashboardLayout
+      role="Parent"
+      nav={nav}
+      user={{ name: "Parent account", detail: "Grade 7B" }}
+      title={onMessages ? "Messages" : "Overview"}
+      subtitle={onMessages ? "Talk to your child's teachers." : "How your child is doing this term."}
+      searchPlaceholder="Search subjects, teachers…"
+    >
+      <div className="mx-auto max-w-5xl">
         <Routes>
           <Route path="/" element={<Overview />} />
           <Route path="messages" element={<ParentsM />} />
         </Routes>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

@@ -3,7 +3,6 @@ import TeacherDashboard from './Dashboards/Teachers_Dashboard/Teacher_Dashboard.
 import StudentPage from './Dashboards/Student_Dashboard/SD_Homepage.jsx';
 import PD_Landing from './Dashboards/Parents_Dashboard/PD_Landing.jsx';
 import PD_Homepage from './Dashboards/Parents_Dashboard/PD_Homepage.jsx';
-import './App.css'
 
 function App() {
   return (

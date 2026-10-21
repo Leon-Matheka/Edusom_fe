@@ -1,14 +1,22 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Bell, Search, Menu } from "lucide-react";
+import { Home, BarChart2, BookOpen, MessageSquare, ClipboardCheck } from "lucide-react";
 import useStudentStore from "../../store/studentStore";
-import Sidebar from "./components/Sidebar";
+import DashboardLayout from "../../components/layout/DashboardLayout";
 import SubjectPerformanceChart from "./components/SubjectPerformanceChart";
 import WeakTopics from "./components/WeakTopics";
 import AITutorChat from "./components/AITutorChat";
 import NotesSection from "./components/NotesSection";
 import CurriculumPanel from "./components/CurriculumPanel";
 import QuizPlatform from "./components/QuizPlatform";
+
+const nav = [
+  { label: "Dashboard", icon: Home, to: "/student" },
+  { label: "Performance", icon: BarChart2, hash: "#performance" },
+  { label: "My courses", icon: BookOpen, hash: "#curriculum" },
+  { label: "AI tutor", icon: MessageSquare, hash: "#tutor" },
+  { label: "Quizzes", icon: ClipboardCheck, hash: "#quiz" },
+];
 
 export default function SD_Homepage() {
   const { studentData, loading, fetchStudentData } = useStudentStore();
@@ -19,8 +27,8 @@ export default function SD_Homepage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex min-h-screen items-center justify-center bg-page">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600" />
       </div>
     );
   }
@@ -28,95 +36,56 @@ export default function SD_Homepage() {
   if (!studentData) return null;
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar />
-
-      <div className="flex-1 md:ml-64 transition-all duration-300">
-        {/* Header */}
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center md:hidden">
-              <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
-                <Menu size={24} />
-              </button>
+    <DashboardLayout
+      role="Student"
+      nav={nav}
+      user={{ name: studentData.name, detail: "Grade 7B" }}
+      title={`Welcome back, ${studentData.name.split(" ")[0]}`}
+      subtitle="Here's what's happening with your learning today."
+      searchPlaceholder="Search courses, topics…"
+    >
+      <div className="space-y-8">
+        <motion.div
+          id="performance"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="grid scroll-mt-24 grid-cols-1 gap-6 md:grid-cols-3"
+        >
+          <div className="rounded-2xl border border-border bg-white p-6 shadow-sm md:col-span-2">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Subject performance</h3>
+              <select className="rounded-lg border border-border px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option>This semester</option>
+                <option>Last semester</option>
+              </select>
             </div>
-
-            <div className="hidden md:block">
-              <h2 className="text-xl font-semibold text-slate-800">
-                Welcome back, {studentData.name.split(' ')[0]}! 👋
-              </h2>
-              <p className="text-sm text-slate-500">Here's what's happening with your learning today.</p>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search courses, topics..."
-                  className="pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent w-64"
-                />
-              </div>
-              <button className="relative p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
-                <Bell size={24} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
+            <div className="grid gap-6 md:grid-cols-2">
+              {studentData.subject_summary.map((subject, i) => (
+                <SubjectPerformanceChart key={i} subject={subject} />
+              ))}
             </div>
           </div>
-        </header>
+          <div className="md:col-span-1">
+            <WeakTopics topics={studentData.weak_topics} />
+          </div>
+        </motion.div>
 
-        {/* Main Content */}
-        <main className="p-6 space-y-8">
-          {/* Stats Overview */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            {/* Subject Performance Charts */}
-            <div className="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-slate-800">Subject Performance</h3>
-                <select className="px-3 py-1 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
-                  <option>This Semester</option>
-                  <option>Last Semester</option>
-                </select>
-              </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                {studentData.subject_summary.map((subject, i) => (
-                  <SubjectPerformanceChart key={i} subject={subject} />
-                ))}
-              </div>
-            </div>
-
-            {/* Weak Topics */}
-            <div className="md:col-span-1">
-              <WeakTopics topics={studentData.weak_topics} />
-            </div>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Curriculum Suggestions */}
-            <div className="lg:col-span-2">
-              <CurriculumPanel curriculum={studentData.curriculum_suggestions} />
-            </div>
-
-            {/* AI Tutor */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-6">
-                <AITutorChat />
-                <NotesSection />
-              </div>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div id="curriculum" className="scroll-mt-24 lg:col-span-2">
+            <CurriculumPanel curriculum={studentData.curriculum_suggestions} />
+          </div>
+          <div id="tutor" className="scroll-mt-24 lg:col-span-1">
+            <div className="sticky top-24 space-y-6">
+              <AITutorChat />
+              <NotesSection />
             </div>
           </div>
+        </div>
 
-          {/* Quiz Platform Placeholder */}
-          <div className="mt-10">
-            <QuizPlatform />
-          </div>
-        </main>
+        <div id="quiz" className="scroll-mt-24">
+          <QuizPlatform />
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
-

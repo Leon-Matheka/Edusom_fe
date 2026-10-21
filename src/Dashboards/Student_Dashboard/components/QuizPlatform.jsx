@@ -77,7 +77,7 @@ export default function QuizPlatform() {
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-center space-x-4 bg-white/20 backdrop-blur-md p-4 rounded-xl inline-flex"
           >
-            <CheckCircle size={32} className="text-emerald-300" />
+            <CheckCircle size={32} className="text-primary-300" />
             <div>
               <p className="font-semibold text-lg">Quiz Complete!</p>
               <p className="text-primary-100">You scored <span className="font-bold text-white">{score}%</span></p>

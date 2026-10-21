@@ -143,7 +143,7 @@ export default function ResourcePlanner() {
         <button
           onClick={() => setNotesOpen(!notesOpen)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm ${
-            notesOpen ? "bg-green-600 text-white border-green-600" : "bg-white hover:bg-slate-50"
+            notesOpen ? "bg-primary-600 text-white border-primary-600" : "bg-white hover:bg-slate-50"
           }`}
           title="Personal notes"
         >
@@ -171,7 +171,7 @@ export default function ResourcePlanner() {
           />
           <button
             onClick={() => setShared([...shared, `Note: ${notes}`])}
-            className="mt-2 flex items-center gap-1 bg-green-600 text-white px-3 py-1 rounded"
+            className="mt-2 flex items-center gap-1 bg-primary-600 text-white px-3 py-1 rounded"
           >
             <Share2 size={14} /> Save & Share Notes
           </button>
@@ -285,7 +285,7 @@ export default function ResourcePlanner() {
                                   />
                                   <button
                                     type="submit"
-                                    className="bg-green-600 text-white px-3 py-1 rounded flex items-center gap-1"
+                                    className="bg-primary-600 text-white px-3 py-1 rounded flex items-center gap-1"
                                   >
                                     <LinkIcon size={14} /> Add
                                   </button>
@@ -298,7 +298,7 @@ export default function ResourcePlanner() {
                                           href={l}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="text-blue-600 underline"
+                                          className="text-primary-700 underline"
                                         >
                                           {l}
                                         </a>
@@ -310,7 +310,7 @@ export default function ResourcePlanner() {
 
                               <button
                                 onClick={() => handleShareLesson(day, lesson)}
-                                className="flex items-center gap-1 text-green-600 hover:underline text-sm"
+                                className="flex items-center gap-1 text-primary-600 hover:underline text-sm"
                               >
                                 <Share2 size={14} /> Share this lesson
                               </button>
@@ -338,7 +338,7 @@ export default function ResourcePlanner() {
                           placeholder="Lesson title / subject"
                           className="flex-1 border rounded px-2 py-1 min-w-[160px]"
                         />
-                        <button type="submit" className="bg-green-600 text-white px-3 py-1 rounded">
+                        <button type="submit" className="bg-primary-600 text-white px-3 py-1 rounded">
                           Add
                         </button>
                         <button
@@ -352,7 +352,7 @@ export default function ResourcePlanner() {
                     ) : (
                       <button
                         onClick={() => setAddingLessonDay(day)}
-                        className="flex items-center gap-1 text-sm text-green-700 hover:underline"
+                        className="flex items-center gap-1 text-sm text-primary-700 hover:underline"
                       >
                         <Plus size={14} /> Add lesson
                       </button>
