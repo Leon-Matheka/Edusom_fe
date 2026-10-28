@@ -99,7 +99,7 @@ const AITutorChat = () => {
           <div>
             <h3 className="font-semibold text-slate-800">AI Tutor</h3>
             <div className="flex items-center space-x-1">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+              <span className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></span>
               <span className="text-xs text-slate-500">Online</span>
             </div>
           </div>
@@ -193,7 +193,7 @@ const AITutorChat = () => {
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="w-2 h-2 bg-purple-500 rounded-full"
+                  className="w-2 h-2 bg-slate-500 rounded-full"
                 />
                 <span className="text-sm text-slate-600 font-medium">Speaking...</span>
               </>

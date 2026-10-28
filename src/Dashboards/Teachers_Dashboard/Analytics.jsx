@@ -63,11 +63,11 @@ function Analytics() {
             placeholder="Enter student name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="border rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="border rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           >
             Search
           </button>

@@ -5,17 +5,17 @@ import { PlayCircle, FileText, CheckCircle, Clock, ChevronRight } from 'lucide-r
 const CurriculumPanel = ({ curriculum }) => {
   const getIcon = (type) => {
     switch (type) {
-      case 'Video': return <PlayCircle size={18} className="text-blue-500" />;
-      case 'Quiz': return <CheckCircle size={18} className="text-emerald-500" />;
-      case 'Article': return <FileText size={18} className="text-purple-500" />;
+      case 'Video': return <PlayCircle size={18} className="text-secondary-500" />;
+      case 'Quiz': return <CheckCircle size={18} className="text-primary-500" />;
+      case 'Article': return <FileText size={18} className="text-slate-500" />;
       default: return <FileText size={18} className="text-slate-500" />;
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Completed': return 'bg-emerald-100 text-emerald-700';
-      case 'In Progress': return 'bg-blue-100 text-blue-700';
+      case 'Completed': return 'bg-primary-100 text-primary-700';
+      case 'In Progress': return 'bg-secondary-100 text-secondary-700';
       default: return 'bg-slate-100 text-slate-600';
     }
   };

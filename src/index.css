@@ -3,7 +3,54 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+  :root {
+    --page: 251 250 247;
+    --panel: 243 241 234;
+    --border: 231 228 220;
+    --ink: 27 31 59;
+    --subtle: 91 96 114;
+    --card: 255 255 255;
   }
+  /* Added to the dashboard root when dark mode is on. */
+  .dark {
+    --page: 15 22 32;
+    --panel: 24 34 48;
+    --border: 40 54 72;
+    --ink: 232 240 240;
+    --subtle: 150 168 176;
+    --card: 22 31 44;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-page text-ink font-sans antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+/* Dark mode: remap the plain light utilities the older pages still use. */
+.dark .bg-white { background-color: rgb(var(--card)); }
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover { background-color: rgb(var(--panel)); }
+.dark .border,
+.dark .border-slate-100,
+.dark .border-slate-200 { border-color: rgb(var(--border)); }
+.dark .text-slate-500,
+.dark .text-slate-600,
+.dark .text-slate-700 { color: rgb(var(--subtle)); }
+.dark .text-slate-800,
+.dark .text-slate-900 { color: rgb(var(--ink)); }
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: rgb(var(--panel));
+  color: rgb(var(--ink));
+  border-color: rgb(var(--border));
 }

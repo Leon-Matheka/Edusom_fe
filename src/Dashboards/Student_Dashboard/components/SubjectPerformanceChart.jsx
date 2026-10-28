@@ -18,8 +18,8 @@ const SubjectPerformanceChart = ({ subject }) => {
   ];
 
   const getGradeColor = (grade) => {
-    if (grade.startsWith('A')) return 'text-emerald-500 bg-emerald-50';
-    if (grade.startsWith('B')) return 'text-blue-500 bg-blue-50';
+    if (grade.startsWith('A')) return 'text-primary-500 bg-primary-50';
+    if (grade.startsWith('B')) return 'text-secondary-500 bg-secondary-50';
     if (grade.startsWith('C')) return 'text-yellow-500 bg-yellow-50';
     return 'text-red-500 bg-red-50';
   };
