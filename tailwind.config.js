@@ -37,11 +37,12 @@ export default {
           900: '#372706',
         },
         // Shared neutrals used across Student/Teacher/Parent pages.
-        ink: '#1B1F3B',
-        subtle: '#5B6072',
-        page: '#FBFAF7',
-        panel: '#F3F1EA',
-        border: '#E7E4DC',
+        // Driven by CSS variables (see index.css) so the teacher dashboard can switch to dark mode.
+        ink: 'rgb(var(--ink) / <alpha-value>)',
+        subtle: 'rgb(var(--subtle) / <alpha-value>)',
+        page: 'rgb(var(--page) / <alpha-value>)',
+        panel: 'rgb(var(--panel) / <alpha-value>)',
+        border: 'rgb(var(--border) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

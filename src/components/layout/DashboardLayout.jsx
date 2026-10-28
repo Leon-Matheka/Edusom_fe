@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Bell, Search, X, LogOut, GraduationCap } from 'lucide-react';
+import { Menu, Bell, Search, X, LogOut, GraduationCap, UserCircle, Moon, Sun } from 'lucide-react';
 
 /**
  * Shared shell for the Teacher, Student and Parent dashboards:
  * a deep-teal side panel, a slim top bar and a content area.
+ *
+ * Optional header icons: profileTo (link to a profile page), onToggleDark + darkMode (theme toggle).
  *
  * nav items: { label, icon, to }   -> router link (matches the exact path)
  *            { label, icon, hash } -> in-page section link, e.g. '#performance'
@@ -16,6 +18,9 @@ export default function DashboardLayout({
   title,
   subtitle,
   searchPlaceholder = 'Search…',
+  profileTo,
+  darkMode,
+  onToggleDark,
   children,
 }) {
   const [open, setOpen] = useState(false);
@@ -40,7 +45,7 @@ export default function DashboardLayout({
     }`;
 
   return (
-    <div className="min-h-screen bg-page text-ink">
+    <div className={`min-h-screen bg-page text-ink ${darkMode ? 'dark' : ''}`}>
       {open && (
         <div
           className="fixed inset-0 z-30 bg-primary-900/50 md:hidden"
@@ -148,10 +153,25 @@ export default function DashboardLayout({
                 className="w-64 rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
               />
             </div>
+            {onToggleDark && (
+              <button
+                onClick={onToggleDark}
+                className="rounded-full p-2 text-subtle hover:bg-panel"
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={darkMode ? 'Light mode' : 'Dark mode'}
+              >
+                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            )}
             <button className="relative rounded-full p-2 text-subtle hover:bg-panel" aria-label="Notifications">
               <Bell size={20} />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-page bg-primary-500" />
             </button>
+            {profileTo && (
+              <Link to={profileTo} className="rounded-full p-2 text-subtle hover:bg-panel" aria-label="Profile" title="Profile">
+                <UserCircle size={22} />
+              </Link>
+            )}
           </div>
         </header>
 

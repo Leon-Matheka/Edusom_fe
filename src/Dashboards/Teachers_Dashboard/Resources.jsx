@@ -1,385 +1,314 @@
-import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
-import {
-  ChevronDown,
-  ChevronUp,
-  Upload,
-  Link as LinkIcon,
-  StickyNote,
-  Plus,
-  Share2,
-  X,
-} from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, Link as LinkIcon, Plus, Share2, StickyNote, Trash2, Upload, X } from "lucide-react";
 
-export default function ResourcePlanner() {
-  const currentTeacherId = "T123"; // replace with logged-in teacher ID
-  const [classes, setClasses] = useState([]);
-  const [loading, setLoading] = useState(true);
+const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
-  // Which day panel is open
-  const [openDay, setOpenDay] = useState(null);
-  // Which lesson (within whichever day) is open: { day, id } | null
-  const [openLesson, setOpenLesson] = useState(null);
-  // Day currently showing the "add lesson" mini-form
-  const [addingLessonDay, setAddingLessonDay] = useState(null);
+// Fixed school day. `break` rows span the whole week and can't hold lessons.
+const periods = [
+  { id: "p1", label: "8:00 – 8:40" },
+  { id: "p2", label: "8:40 – 9:20" },
+  { id: "p3", label: "9:20 – 10:00" },
+  { id: "break", label: "10:00 – 10:30", isBreak: true },
+  { id: "p4", label: "10:30 – 11:10" },
+  { id: "p5", label: "11:10 – 11:50" },
+  { id: "p6", label: "11:50 – 12:30" },
+];
 
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const blank = () => ({ files: [], links: [], notes: "" });
 
-  // lessonsByDay: { Monday: [ { id, time, title, resources: { files: [], links: [], notes: "" } } ], ... }
-  const [lessonsByDay, setLessonsByDay] = useState(
-    Object.fromEntries(days.map((d) => [d, []]))
-  );
+// Starter timetable so the grid isn't empty on first load — edit or delete freely.
+const starter = [
+  ["Monday", "p1", "Mathematics — Grade 7B"],
+  ["Monday", "p4", "Physics — Grade 8A"],
+  ["Tuesday", "p2", "Mathematics — Grade 7B"],
+  ["Wednesday", "p1", "Data Analysis — Grade 8A"],
+  ["Thursday", "p5", "Physics — Grade 8A"],
+  ["Friday", "p3", "Mathematics — Grade 7B"],
+].map(([day, period, title]) => ({ id: `${day}-${period}`, day, period, title, resources: blank() }));
 
-  // Notes panel (separate from per-lesson notes) — toggled from an icon, behaves like a day panel
+const input =
+  "rounded-lg border border-border bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200";
+
+export default function Resources() {
+  const [lessons, setLessons] = useState(starter);
+  const [plannerOpen, setPlannerOpen] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState("");
-
+  const [selectedId, setSelectedId] = useState(null);
+  const [adding, setAdding] = useState(null); // { day, period } | null
   const [shared, setShared] = useState([]);
 
-  useEffect(() => {
-    Papa.parse("/teachers_data.csv", {
-      download: true,
-      header: true,
-      complete: (r) => {
-        const mine = r.data.filter((c) => c.teacher_id === currentTeacherId);
-        setClasses(mine);
+  const selected = lessons.find((l) => l.id === selectedId) || null;
+  const teachingSlots = days.length * periods.filter((p) => !p.isBreak).length;
+  const lessonAt = (day, period) => lessons.find((l) => l.day === day && l.period === period);
 
-        // Seed the Monday-Friday panels from the CSV so existing classes show up
-        // as lessons a teacher can click into and add resources/notes for.
-        const seeded = Object.fromEntries(days.map((d) => [d, []]));
-        mine.forEach((c) => {
-          if (days.includes(c.day)) {
-            seeded[c.day].push({
-              id: c.class_id || `${c.day}-${c.time}-${c.subject}`,
-              time: c.time || "",
-              title: c.class_name ? `${c.subject} — ${c.class_name}` : c.subject,
-              resources: { files: [], links: [], notes: "" },
-            });
-          }
-        });
-        setLessonsByDay(seeded);
-        setLoading(false);
-      },
-      error: () => setLoading(false),
-    });
-  }, []);
+  const update = (id, fn) => setLessons((prev) => prev.map((l) => (l.id === id ? fn(l) : l)));
 
-  const toggleDay = (day) => {
-    setOpenDay(openDay === day ? null : day);
-    setOpenLesson(null);
-    setAddingLessonDay(null);
-  };
-
-  const toggleLesson = (day, id) => {
-    const isSame = openLesson && openLesson.day === day && openLesson.id === id;
-    setOpenLesson(isSame ? null : { day, id });
-  };
-
-  const updateLesson = (day, id, updater) => {
-    setLessonsByDay((prev) => ({
-      ...prev,
-      [day]: prev[day].map((l) => (l.id === id ? updater(l) : l)),
-    }));
-  };
-
-  const handleAddLesson = (e, day) => {
+  const addLesson = (e) => {
     e.preventDefault();
-    const time = e.target.elements.time.value;
-    const title = e.target.elements.title.value;
+    const title = e.target.elements.title.value.trim();
     if (!title) return;
-    const newLesson = {
-      id: `${day}-${Date.now()}`,
-      time,
-      title,
-      resources: { files: [], links: [], notes: "" },
-    };
-    setLessonsByDay((prev) => ({ ...prev, [day]: [...prev[day], newLesson] }));
-    setAddingLessonDay(null);
-    setOpenLesson({ day, id: newLesson.id });
+    const lesson = { id: `${adding.day}-${adding.period}-${Date.now()}`, ...adding, title, resources: blank() };
+    setLessons((prev) => [...prev, lesson]);
+    setSelectedId(lesson.id);
+    setAdding(null);
   };
 
-  const handleLessonFileUpload = (day, id, e) => {
-    const uploaded = Array.from(e.target.files).map((f) => f.name);
-    updateLesson(day, id, (l) => ({
-      ...l,
-      resources: { ...l.resources, files: [...l.resources.files, ...uploaded] },
-    }));
+  const removeLesson = (id) => {
+    setLessons((prev) => prev.filter((l) => l.id !== id));
+    setSelectedId(null);
   };
 
-  const handleLessonAddLink = (day, id, e) => {
+  const addFiles = (id, e) => {
+    const names = Array.from(e.target.files).map((f) => f.name);
+    update(id, (l) => ({ ...l, resources: { ...l.resources, files: [...l.resources.files, ...names] } }));
+  };
+
+  const addLink = (id, e) => {
     e.preventDefault();
-    const url = e.target.elements.url.value;
+    const url = e.target.elements.url.value.trim();
     if (!url) return;
-    updateLesson(day, id, (l) => ({
-      ...l,
-      resources: { ...l.resources, links: [...l.resources.links, url] },
-    }));
+    update(id, (l) => ({ ...l, resources: { ...l.resources, links: [...l.resources.links, url] } }));
     e.target.reset();
   };
 
-  const handleLessonNotesChange = (day, id, value) => {
-    updateLesson(day, id, (l) => ({
-      ...l,
-      resources: { ...l.resources, notes: value },
-    }));
+  const shareLesson = (l) => {
+    const slot = periods.find((p) => p.id === l.period)?.label;
+    setShared((prev) => [...prev, `${l.day} (${slot}) — ${l.title}`]);
   };
 
-  const handleShareLesson = (day, lesson) => {
-    const label = `${day} ${lesson.time ? `(${lesson.time}) ` : ""}— ${lesson.title}`;
-    setShared([...shared, label]);
-  };
+  const iconBtn = (active) =>
+    `flex items-center gap-2 rounded-lg border px-3 py-2 text-sm shadow-sm ${
+      active ? "border-primary-600 bg-primary-600 text-white" : "border-border bg-white hover:bg-panel"
+    }`;
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">📚 Resource Planner</h2>
-          <p className="text-slate-600">
-            Your teaching overview, weekly planner, and resource hub in one place.
-          </p>
+          <h2 className="text-2xl font-semibold">Resources</h2>
+          <p className="text-subtle">Your timetable, lesson materials and notes in one place.</p>
         </div>
-
-        {/* Notes icon — opens/closes exactly like a day panel */}
-        <button
-          onClick={() => setNotesOpen(!notesOpen)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg border shadow-sm ${
-            notesOpen ? "bg-primary-600 text-white border-primary-600" : "bg-white hover:bg-slate-50"
-          }`}
-          title="Personal notes"
-        >
-          <StickyNote size={18} />
-          <span className="hidden sm:inline">Notes</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setPlannerOpen((v) => !v)} className={iconBtn(plannerOpen)} title="Weekly timetable" aria-pressed={plannerOpen}>
+            <CalendarDays size={18} />
+            <span className="hidden sm:inline">Planner</span>
+          </button>
+          <button onClick={() => setNotesOpen((v) => !v)} className={iconBtn(notesOpen)} title="Personal notes" aria-pressed={notesOpen}>
+            <StickyNote size={18} />
+            <span className="hidden sm:inline">Notes</span>
+          </button>
+        </div>
       </div>
 
-      {/* Notes panel, same collapsible behaviour as a day panel */}
       {notesOpen && (
-        <div className="bg-white p-6 rounded shadow border">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <StickyNote size={18} /> Personal Notes
+        <div className="rounded-2xl border border-border bg-white p-6">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 font-semibold">
+              <StickyNote size={18} /> Personal notes
             </h3>
-            <button onClick={() => setNotesOpen(false)} className="text-slate-400 hover:text-slate-600">
+            <button onClick={() => setNotesOpen(false)} className="text-subtle hover:text-ink" aria-label="Close notes">
               <X size={18} />
             </button>
           </div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Write down ideas, reminders, or general notes..."
-            className="w-full border rounded p-2 min-h-[100px]"
+            placeholder="Write down ideas, reminders, or general notes…"
+            className={`${input} min-h-[100px] w-full`}
           />
           <button
-            onClick={() => setShared([...shared, `Note: ${notes}`])}
-            className="mt-2 flex items-center gap-1 bg-primary-600 text-white px-3 py-1 rounded"
+            onClick={() => notes.trim() && setShared((prev) => [...prev, `Note: ${notes}`])}
+            className="mt-2 flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-sm text-white hover:bg-primary-700"
           >
-            <Share2 size={14} /> Save & Share Notes
+            <Share2 size={14} /> Save and share notes
           </button>
         </div>
       )}
 
-      {/* Overview Summary */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold">Total Classes</h3>
-          <p className="text-2xl">{classes.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold">Subjects Taught</h3>
-          <p className="text-2xl">{[...new Set(classes.map((c) => c.subject))].length}</p>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-semibold">School</h3>
-          <p className="text-2xl">{classes[0]?.school || "N/A"}</p>
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          ["Lessons this week", lessons.length],
+          ["Free periods", teachingSlots - lessons.length],
+          ["Shared resources", shared.length],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-2xl border border-border bg-white p-5">
+            <p className="text-sm text-subtle">{label}</p>
+            <p className="mt-1 text-2xl font-semibold">{value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Weekly Planner: Monday - Friday only */}
-      <div className="bg-white p-6 rounded shadow mt-6">
-        <h3 className="text-lg font-semibold mb-4">Weekly Planner</h3>
-        {loading ? (
-          <p>Loading schedule...</p>
-        ) : (
-          days.map((day) => {
-            const dayLessons = lessonsByDay[day] || [];
-            return (
-              <div key={day} className="border rounded-lg mb-3">
-                <button
-                  onClick={() => toggleDay(day)}
-                  className="w-full flex items-center justify-between px-4 py-2 font-semibold bg-slate-100 hover:bg-slate-200"
-                >
-                  <span>{day}</span>
-                  {openDay === day ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                </button>
+      {plannerOpen && (
+        <section className="rounded-2xl border border-border bg-white p-6">
+          <h3 className="mb-4 font-semibold">Weekly timetable</h3>
+          <div className="overflow-x-auto">
+            <div className="grid min-w-[760px] grid-cols-[110px_repeat(5,minmax(0,1fr))] gap-px overflow-hidden rounded-lg border border-border bg-border text-sm">
+              <div className="bg-panel p-2.5 font-medium text-subtle">Time</div>
+              {days.map((d) => (
+                <div key={d} className="bg-panel p-2.5 text-center font-medium">
+                  {d}
+                </div>
+              ))}
 
-                {openDay === day && (
-                  <div className="p-4 space-y-2">
-                    {dayLessons.length === 0 && (
-                      <p className="text-slate-500">No lessons scheduled.</p>
-                    )}
-
-                    {dayLessons.map((lesson) => {
-                      const isOpen =
-                        openLesson && openLesson.day === day && openLesson.id === lesson.id;
-                      return (
-                        <div key={lesson.id} className="border rounded-lg overflow-hidden">
-                          <button
-                            onClick={() => toggleLesson(day, lesson.id)}
-                            className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 text-left"
-                          >
-                            <div>
-                              <p className="font-semibold">{lesson.title}</p>
-                              {lesson.time && (
-                                <p className="text-sm text-slate-500">Time: {lesson.time}</p>
-                              )}
-                            </div>
-                            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </button>
-
-                          {isOpen && (
-                            <div className="p-3 space-y-4 bg-white">
-                              {/* Lesson plan / notes for this specific lesson */}
-                              <div>
-                                <p className="text-sm font-semibold mb-1">Lesson plan</p>
-                                <textarea
-                                  value={lesson.resources.notes}
-                                  onChange={(e) =>
-                                    handleLessonNotesChange(day, lesson.id, e.target.value)
-                                  }
-                                  placeholder="Write the lesson plan / objectives for this lesson..."
-                                  className="w-full border rounded p-2 min-h-[80px]"
-                                />
-                              </div>
-
-                              {/* File resources for this lesson */}
-                              <div>
-                                <p className="text-sm font-semibold mb-1">Lesson materials</p>
-                                <input
-                                  type="file"
-                                  multiple
-                                  onChange={(e) => handleLessonFileUpload(day, lesson.id, e)}
-                                />
-                                {lesson.resources.files.length > 0 && (
-                                  <ul className="mt-2 space-y-1">
-                                    {lesson.resources.files.map((f, i) => (
-                                      <li key={i} className="text-sm border p-2 rounded flex items-center gap-2">
-                                        <Upload size={14} /> {f}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-
-                              {/* Link resources for this lesson */}
-                              <div>
-                                <p className="text-sm font-semibold mb-1">Reference links</p>
-                                <form
-                                  onSubmit={(e) => handleLessonAddLink(day, lesson.id, e)}
-                                  className="flex gap-2"
-                                >
-                                  <input
-                                    type="url"
-                                    name="url"
-                                    placeholder="Add a reference link..."
-                                    className="flex-1 border rounded px-2 py-1"
-                                  />
-                                  <button
-                                    type="submit"
-                                    className="bg-primary-600 text-white px-3 py-1 rounded flex items-center gap-1"
-                                  >
-                                    <LinkIcon size={14} /> Add
-                                  </button>
-                                </form>
-                                {lesson.resources.links.length > 0 && (
-                                  <ul className="mt-2 space-y-1">
-                                    {lesson.resources.links.map((l, i) => (
-                                      <li key={i} className="text-sm border p-2 rounded">
-                                        <a
-                                          href={l}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          className="text-primary-700 underline"
-                                        >
-                                          {l}
-                                        </a>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-
-                              <button
-                                onClick={() => handleShareLesson(day, lesson)}
-                                className="flex items-center gap-1 text-primary-600 hover:underline text-sm"
-                              >
-                                <Share2 size={14} /> Share this lesson
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {/* Add a new lesson slot */}
-                    {addingLessonDay === day ? (
-                      <form
-                        onSubmit={(e) => handleAddLesson(e, day)}
-                        className="flex flex-wrap gap-2 items-center border rounded p-2"
-                      >
-                        <input
-                          type="text"
-                          name="time"
-                          placeholder="Time (e.g. 9:00 - 9:40)"
-                          className="border rounded px-2 py-1 w-40"
-                        />
-                        <input
-                          type="text"
-                          name="title"
-                          placeholder="Lesson title / subject"
-                          className="flex-1 border rounded px-2 py-1 min-w-[160px]"
-                        />
-                        <button type="submit" className="bg-primary-600 text-white px-3 py-1 rounded">
-                          Add
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setAddingLessonDay(null)}
-                          className="text-slate-500 px-2"
-                        >
-                          Cancel
-                        </button>
-                      </form>
-                    ) : (
-                      <button
-                        onClick={() => setAddingLessonDay(day)}
-                        className="flex items-center gap-1 text-sm text-primary-700 hover:underline"
-                      >
-                        <Plus size={14} /> Add lesson
-                      </button>
-                    )}
+              {periods.map((p) =>
+                p.isBreak ? (
+                  <div key={p.id} className="col-span-6 flex items-center justify-center gap-3 bg-panel/70 py-1.5 text-xs text-subtle">
+                    <span>Break</span>
+                    <span>{p.label}</span>
                   </div>
+                ) : (
+                  <FragmentRow
+                    key={p.id}
+                    period={p}
+                    lessonAt={lessonAt}
+                    selectedId={selectedId}
+                    onSelect={(id) => {
+                      setSelectedId(id === selectedId ? null : id);
+                      setAdding(null);
+                    }}
+                    onAdd={(day) => {
+                      setAdding({ day, period: p.id });
+                      setSelectedId(null);
+                    }}
+                  />
+                )
+              )}
+            </div>
+          </div>
+
+          {adding && (
+            <form onSubmit={addLesson} className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
+              <span className="text-sm text-subtle">
+                {adding.day}, {periods.find((p) => p.id === adding.period)?.label}
+              </span>
+              <input name="title" autoFocus placeholder="Subject / class, e.g. Mathematics — Grade 7B" className={`${input} min-w-[220px] flex-1`} />
+              <button type="submit" className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm text-white hover:bg-primary-700">
+                Add lesson
+              </button>
+              <button type="button" onClick={() => setAdding(null)} className="px-2 text-sm text-subtle">
+                Cancel
+              </button>
+            </form>
+          )}
+
+          {selected && (
+            <div className="mt-4 space-y-4 rounded-lg border border-border p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{selected.title}</p>
+                  <p className="text-sm text-subtle">
+                    {selected.day} · {periods.find((p) => p.id === selected.period)?.label}
+                  </p>
+                </div>
+                <button onClick={() => removeLesson(selected.id)} className="flex items-center gap-1 text-sm text-red-600 hover:underline">
+                  <Trash2 size={14} /> Remove
+                </button>
+              </div>
+
+              <div>
+                <p className="mb-1 text-sm font-semibold">Lesson plan</p>
+                <textarea
+                  value={selected.resources.notes}
+                  onChange={(e) => update(selected.id, (l) => ({ ...l, resources: { ...l.resources, notes: e.target.value } }))}
+                  placeholder="Objectives and plan for this lesson…"
+                  className={`${input} min-h-[80px] w-full`}
+                />
+              </div>
+
+              <div>
+                <p className="mb-1 text-sm font-semibold">Lesson materials</p>
+                <input type="file" multiple onChange={(e) => addFiles(selected.id, e)} className="text-sm" />
+                {selected.resources.files.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {selected.resources.files.map((f, i) => (
+                      <li key={i} className="flex items-center gap-2 rounded border border-border p-2 text-sm">
+                        <Upload size={14} /> {f}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
-            );
-          })
-        )}
-      </div>
 
-      {/* Shared Resources */}
-      <div className="bg-white p-6 rounded shadow">
-        <h3 className="text-lg font-semibold mb-4">Shared Resources</h3>
+              <div>
+                <p className="mb-1 text-sm font-semibold">Reference links</p>
+                <form onSubmit={(e) => addLink(selected.id, e)} className="flex gap-2">
+                  <input type="url" name="url" placeholder="Add a reference link…" className={`${input} flex-1`} />
+                  <button type="submit" className="flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-sm text-white hover:bg-primary-700">
+                    <LinkIcon size={14} /> Add
+                  </button>
+                </form>
+                {selected.resources.links.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {selected.resources.links.map((l, i) => (
+                      <li key={i} className="rounded border border-border p-2 text-sm">
+                        <a href={l} target="_blank" rel="noreferrer" className="text-primary-700 underline">
+                          {l}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <button onClick={() => shareLesson(selected)} className="flex items-center gap-1 text-sm text-primary-700 hover:underline">
+                <Share2 size={14} /> Share this lesson
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      <section className="rounded-2xl border border-border bg-white p-6">
+        <h3 className="mb-3 font-semibold">Shared resources</h3>
         {shared.length === 0 ? (
-          <p className="text-slate-500">No resources shared yet.</p>
+          <p className="text-subtle">No resources shared yet.</p>
         ) : (
           <ul className="space-y-1">
             {shared.map((s, i) => (
-              <li key={i} className="border p-2 rounded">
+              <li key={i} className="rounded border border-border p-2 text-sm">
                 {s}
               </li>
             ))}
           </ul>
         )}
-      </div>
+      </section>
     </div>
+  );
+}
+
+// One timetable row: the time label plus a cell for each weekday.
+function FragmentRow({ period, lessonAt, selectedId, onSelect, onAdd }) {
+  return (
+    <>
+      <div className="bg-white p-2.5 text-xs text-subtle">{period.label}</div>
+      {days.map((day) => {
+        const lesson = lessonAt(day, period.id);
+        return (
+          <div key={day} className="min-h-[64px] bg-white p-1.5">
+            {lesson ? (
+              <button
+                onClick={() => onSelect(lesson.id)}
+                className={`h-full w-full rounded-md border p-2 text-left text-xs font-medium leading-snug transition-colors ${
+                  selectedId === lesson.id
+                    ? "border-primary-600 bg-primary-100 text-primary-900"
+                    : "border-primary-200 bg-primary-50 text-primary-800 hover:bg-primary-100"
+                }`}
+              >
+                {lesson.title}
+              </button>
+            ) : (
+              <button
+                onClick={() => onAdd(day)}
+                aria-label={`Add lesson on ${day} at ${period.label}`}
+                className="flex h-full w-full items-center justify-center rounded-md text-border transition-colors hover:bg-panel hover:text-primary-600"
+              >
+                <Plus size={16} />
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </>
   );
 }

@@ -16,6 +16,10 @@ function App() {
 
       {/* Logged-in parent dashboard — Overview + Messages live inside PD_Homepage's own <Routes> */}
       <Route path="/parent/*" element={<PD_Homepage />} />
+      <Route path="/parents/*" element={<Navigate to="/parent" replace />} />
+
+      {/* Anything else falls back to home instead of a blank page */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

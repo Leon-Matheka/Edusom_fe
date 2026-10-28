@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { LayoutDashboard, User, Upload as UploadIcon, FolderOpen, BarChart3, Users } from 'lucide-react';
+import { LayoutDashboard, Upload as UploadIcon, FolderOpen, BarChart3, Users } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout.jsx';
+import { ThemeContext } from '../../components/layout/ThemeContext.js';
 import Landing from './Landing.jsx';
 import Profile from './Profile.jsx';
 import Upload from './Upload.jsx';
@@ -8,9 +10,9 @@ import Resources from './Resources.jsx';
 import Analytics from './Analytics.jsx';
 import Socials from './Socials.jsx';
 
+// Profile is reached from the icon in the header, so it is not in the side panel.
 const nav = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/teacher' },
-  { label: 'Profile', icon: User, to: '/teacher/profile' },
   { label: 'Upload', icon: UploadIcon, to: '/teacher/upload' },
   { label: 'Resources', icon: FolderOpen, to: '/teacher/resources' },
   { label: 'Analytics', icon: BarChart3, to: '/teacher/analytics' },
@@ -18,23 +20,30 @@ const nav = [
 ];
 
 export default function TeacherDashboard() {
+  const [dark, setDark] = useState(false);
+
   return (
-    <DashboardLayout
-      role="Teacher"
-      nav={nav}
-      user={{ name: 'Leon Otieno', detail: 'Mathematics & Physics' }}
-      title="Teacher portal"
-      subtitle="Grade 7B · Term 3"
-      searchPlaceholder="Search classes, students…"
-    >
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="upload" element={<Upload />} />
-        <Route path="resources" element={<Resources />} />
-        <Route path="analytics" element={<Analytics />} />
-        <Route path="socials" element={<Socials />} />
-      </Routes>
-    </DashboardLayout>
+    <ThemeContext.Provider value={{ dark }}>
+      <DashboardLayout
+        role="Teacher"
+        nav={nav}
+        user={{ name: 'Leon Otieno', detail: 'Mathematics & Physics' }}
+        title="Teacher portal"
+        subtitle="Grade 7B · Term 3"
+        searchPlaceholder="Search classes, students…"
+        profileTo="/teacher/profile"
+        darkMode={dark}
+        onToggleDark={() => setDark((d) => !d)}
+      >
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="upload" element={<Upload />} />
+          <Route path="resources" element={<Resources />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="socials" element={<Socials />} />
+        </Routes>
+      </DashboardLayout>
+    </ThemeContext.Provider>
   );
 }

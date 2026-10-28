@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout.jsx";
-import { MessageCircle, Bell, LayoutGrid, ChevronDown, ArrowUpRight } from "lucide-react";
+import ParentAnalytics from "./ParentAnalytics.jsx";
+import { MessageCircle, Bell, LayoutGrid, BarChart3, ChevronDown, ArrowUpRight } from "lucide-react";
 import ParentsM from "./ParentsM.jsx";
 import { students, getChildrenByParentId } from "../../mockData/classMockData";
 
@@ -24,6 +25,7 @@ const c = {
 
 const nav = [
   { label: "Overview", icon: LayoutGrid, to: "/parent" },
+  { label: "Analytics", icon: BarChart3, to: "/parent/analytics" },
   { label: "Messages", icon: MessageCircle, to: "/parent/messages" },
 ];
 
@@ -202,22 +204,33 @@ function Overview() {
 }
 
 export default function PD_Homepage() {
-  const location = useLocation();
-  const onMessages = location.pathname.startsWith("/parent/messages");
+  const { pathname } = useLocation();
+  const parent = getChildrenByParentId(CURRENT_PARENT_ID)[0]?.parent;
+
+  const titles = {
+    "/parent/analytics": ["Analytics", "How your child is performing, subject by subject."],
+    "/parent/messages": ["Messages", "Talk to your child's teachers."],
+  };
+  const [title, subtitle] = titles[pathname.replace(/\/$/, "")] || [
+    "Overview",
+    "How your child is doing this term.",
+  ];
 
   return (
     <DashboardLayout
       role="Parent"
       nav={nav}
-      user={{ name: "Parent account", detail: "Grade 7B" }}
-      title={onMessages ? "Messages" : "Overview"}
-      subtitle={onMessages ? "Talk to your child's teachers." : "How your child is doing this term."}
+      user={{ name: parent?.name || "Parent", detail: "Parent · Grade 7B" }}
+      title={title}
+      subtitle={subtitle}
       searchPlaceholder="Search subjects, teachers…"
     >
       <div className="mx-auto max-w-5xl">
         <Routes>
           <Route path="/" element={<Overview />} />
+          <Route path="analytics" element={<ParentAnalytics />} />
           <Route path="messages" element={<ParentsM />} />
+          <Route path="*" element={<Navigate to="/parent" replace />} />
         </Routes>
       </div>
     </DashboardLayout>

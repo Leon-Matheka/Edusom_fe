@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Send, ChevronLeft, Search } from "lucide-react";
 import { teachers, students, getChildrenByParentId } from "../../mockData/classMockData";
+import useMessagingStore, { threadKey } from "../../store/messagingStore";
 
 const c = {
   page: "#FBFAF7",
@@ -18,30 +19,14 @@ const c = {
 
 const CURRENT_PARENT_ID = 201;
 
-// Seed one opening message per teacher so the inbox doesn't look empty on first load.
-function seedThread(teacher, childName) {
-  return [
-    {
-      from: "teacher",
-      text: `Hi! Quick note on ${childName}'s recent ${teacher.subject} work — happy to chat if you have questions.`,
-      time: "Mon, 9:04 AM",
-    },
-  ];
-}
-
 export default function ParentsM() {
   const child = useMemo(() => {
     const linked = getChildrenByParentId(CURRENT_PARENT_ID);
     return linked[0] || students[0];
   }, []);
 
-  const [threads, setThreads] = useState(() => {
-    const initial = {};
-    teachers.forEach((t) => {
-      initial[t.id] = seedThread(t, child.name.split(" ")[0]);
-    });
-    return initial;
-  });
+  const threads = useMessagingStore((st) => st.threads);
+  const send = useMessagingStore((st) => st.send);
 
   const [query, setQuery] = useState("");
   const [activeTeacherId, setActiveTeacherId] = useState(teachers[0].id);
@@ -49,7 +34,7 @@ export default function ParentsM() {
   const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
 
   const activeTeacher = teachers.find((t) => t.id === activeTeacherId);
-  const activeMessages = threads[activeTeacherId] || [];
+  const activeMessages = threads[threadKey(CURRENT_PARENT_ID, activeTeacherId)] || [];
 
   const filteredTeachers = teachers.filter(
     (t) =>
@@ -58,7 +43,7 @@ export default function ParentsM() {
   );
 
   function lastMessagePreview(teacherId) {
-    const msgs = threads[teacherId] || [];
+    const msgs = threads[threadKey(CURRENT_PARENT_ID, teacherId)] || [];
     return msgs[msgs.length - 1]?.text || "No messages yet";
   }
 
@@ -70,13 +55,7 @@ export default function ParentsM() {
   function sendMessage() {
     const text = draft.trim();
     if (!text) return;
-    setThreads((prev) => ({
-      ...prev,
-      [activeTeacherId]: [
-        ...(prev[activeTeacherId] || []),
-        { from: "parent", text, time: "Just now" },
-      ],
-    }));
+    send(CURRENT_PARENT_ID, activeTeacherId, "parent", text);
     setDraft("");
   }
 

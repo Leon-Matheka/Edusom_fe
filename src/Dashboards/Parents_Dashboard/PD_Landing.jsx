@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
   MessageCircle,
@@ -68,6 +69,8 @@ const steps = [
 ];
 
 export default function ParentsLanding() {
+  const navigate = useNavigate();
+  const openDashboard = () => navigate("/parent");
   return (
     <div style={{ background: c.page, color: c.ink }} className="min-h-screen font-sans">
       {/* NAV */}
@@ -85,10 +88,11 @@ export default function ParentsLanding() {
             <a href="#faq" className="hover:opacity-80 transition">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
-            <button className="text-sm font-medium hidden sm:block" style={{ color: c.ink }}>
+            <button onClick={openDashboard} className="text-sm font-medium hidden sm:block" style={{ color: c.ink }}>
               Log in
             </button>
             <button
+              onClick={openDashboard}
               className="text-sm font-medium px-4 py-2 rounded-lg transition"
               style={{ background: c.teal, color: c.ink }}
             >
@@ -110,12 +114,14 @@ export default function ParentsLanding() {
           </p>
           <div className="mt-8 flex items-center gap-4">
             <button
+              onClick={openDashboard}
               className="flex items-center gap-2 text-sm font-medium px-5 py-3 rounded-lg transition"
               style={{ background: c.teal, color: c.ink }}
             >
               Get started free <ArrowRight size={15} />
             </button>
             <button
+              onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
               className="text-sm font-medium px-5 py-3 rounded-lg transition"
               style={{ border: `1px solid ${c.border}`, color: c.ink }}
             >
@@ -236,6 +242,7 @@ export default function ParentsLanding() {
             Create your free account and connect to your child's class in a couple of minutes.
           </p>
           <button
+            onClick={openDashboard}
             className="mt-6 inline-flex items-center gap-2 text-sm font-medium px-5 py-3 rounded-lg transition"
             style={{ background: c.teal, color: c.ink }}
           >
